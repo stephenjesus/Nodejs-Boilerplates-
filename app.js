@@ -1,52 +1,108 @@
+/** Express Server
+ * @module server/app
+ */
+
+/**
+ * @namespace appServer
+ */
+
 /**
  * Express is a Node.js web application framework
+ * @const
  */
 const express = require("express");
-const bodyParser = require("body-parser");
-const passport = require("passport");
-var log = require('log4js').getLogger("Server");
-
-const {logger} = require("./utils/logger");
 
 /**
- * Initializing the express routers.
+ * Parse Cookie header and populate req.cookies with an object keyed by the cookie names.
+ * @const
+ */
+const cookieParser = require("cookie-parser");
+
+/**
+ * Parse Request Body and populate req.body with it.
+ * @const
+ */
+const bodyParser = require("body-parser");
+
+/**
+ * Initializing express application.
+ * @const
  */
 const app = express();
 
 /**
- * Initializing the mongoose connection.
+ * CORS is a Node.JS package for providing a Connect/Express middleware that can be used to enable CORS
+ * @const
+ */
+const cors = require("cors");
+
+/**
+ * Firebase utilities for initilizing and sending push notification
+ */
+// const firebaseutils = require("./utils/v1/firebaseutils");
+
+/**
+ * Initialize the firebase connection
+ */
+// firebaseutils.initializeFirebase();
+
+/**
+ * Importing mongoose connection
  */
 require("./connection/mongoose");
 
 /**
- * Initializing the passport
+ * Initializing passport
  */
-app.use(passport.initialize());
-app.use(passport.session());
+// require("./connection/passport");
 
-require("./passport/strategy/jwt/index");
-require("./passport/strategy/local/index");
-
-passport.serializeUser(function(user, done) {
-  done(null, user);
-});
-
-passport.deserializeUser(function(user, done) {
-  done(null, user);
-});
 /**
- * Body Parser: The body-parser is used to extracts the entire body portion of an incoming request stream and exposes it on req.body.
- * The body parser is used to handle the data easily.It will parse the text as JSON body.
+ * Setting the view engine of express application as pug so that it can
+ * render the dynamic HTML view of the same.
  */
-app.use(bodyParser.json());
+app.set("view engine", "pug");
+
+/**
+ * Cross Origin Resource Sharing (CORS) allows us to use Web applications within browsers when domains aren't the same
+ * @function
+ * @name use
+ * @memberof module:server/app~appServer
+ * @inner
+ * @param {method} cors - Enable cors in our application
+ */
+app.use(cors());
 
 /**
  * Recognize the incoming Request Object as strings or arrays.
+ * @function
+ * @name use
+ * @memberof module:server/app~appServer
+ * @inner
+ * @param {method} urlencoded - Middleware
  */
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ limit: "10mb", extended: true }));
 
-const users = require("./routes/index");
+/**
+ * Recognize the incoming Request Object as a JSON Object.
+ * @function
+ * @name use
+ * @memberof module:server/app~appServer
+ * @inner
+ * @param {method} json - Middleware
+ */
+app.use(bodyParser.json({ limit: "10mb", extended: true }));
 
-app.use("/users", users);
-log.info("Server Running Sucesssfully");
+/**
+ * Parse Cookie header and populate req.cookies with an object keyed by the cookie names.
+ * @function
+ * @name use
+ * @memberof module:server/app~appServer
+ * @inner
+ * @param {method} cookieParser - Midddleware
+ */
+app.use(cookieParser());
+
+
+require("./routes")(app);
+
 module.exports = app;
